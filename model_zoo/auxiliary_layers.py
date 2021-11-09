@@ -22,9 +22,9 @@ class SentenceAgg(nn.Module):
 class CondAug(nn.Module):
 	def __init__(self):
 		super().__init__()
-		self.mean_weight = torch.normal(1, 0.5)
+		self.mean_weight = torch.normal(torch.tensor(1.0), torch.tensor(0.5))
 		self.mean_weight.requires_grad = True
-		self.std_weight = torch.normal(1, 0.5)
+		self.std_weight = torch.normal(torch.tensor(1.0), torch.tensor(0.5))
 		self.std_weight.requires_grad = True
 
 	def forward(self, x):
@@ -34,6 +34,7 @@ class Image2TextAttention(nn.Module):
 	def __init__(self, output_shape, num_head=1):
 		super().__init__()
 		assert(output_shape%num_head == 0)
+		self.texthead = nn.Linear(768, 64)
 		self.attentor = nn.MultiheadAttention(output_shape, num_head, batch_first=True)
 
 	def forward(self, img, txt):
@@ -41,14 +42,17 @@ class Image2TextAttention(nn.Module):
 		img = (N, Di, H, W)
 		txt = (N, T, Dt)
 		'''
+		height = img.shape[2]
+		width = img.shape[3]
 		img = torch.reshape(img, (img.shape[0], img.shape[1], -1))
 		img = torch.transpose(img, 1, 2)
+		txt = self.texthead(txt)
 		attn_output, attn_output_weights = self.attentor(img, txt, txt)
 		# = (N, H*W, D)
-		attn_output_weights = torch.transpose(attn_output_weights, 1, 2)
-		attn_output_weights = torch.reshape(attn_output_weights, 
-			(attn_output_weights.shape[0], attn_output_weights.shape[1], -1))
-		return attn_output_weights
+		attn_output = torch.transpose(attn_output, 1, 2)
+		attn_output = torch.reshape(attn_output, 
+			(attn_output.shape[0], attn_output.shape[1], height, width))
+		return attn_output
 
 
 class ImgGen(nn.Module):

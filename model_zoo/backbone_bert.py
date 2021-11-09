@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from transformers import AutoModel
+from transformers import AutoModel, AutoTokenizer
 
 class BERTBackbone(nn.Module):
 	def __init__(self):
@@ -16,6 +16,4 @@ class BERTBackbone(nn.Module):
 		outputs
 		(B, T, D) where D is the last layer dim
 		'''
-		return self.model(inputs).last_hidden_state
-
-BERTBackbone()
+		return self.model(**inputs).last_hidden_state
