@@ -54,6 +54,20 @@ class Image2TextAttention(nn.Module):
 			(attn_output.shape[0], attn_output.shape[1], height, width))
 		return attn_output
 
+class ResBlock(nn.Module):
+	def __init__(self):
+		super().__init__()
+		self.conv1 = nn.Conv2d(64, 128, (3,3), 1, padding=1)
+		self.batchnorm1 = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True)
+		self.relu = nn.ReLU()
+		self.conv2 = nn.Conv2d(128, 64, (3,3), 1, padding=1)
+		self.batchnorm2 = nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True)
+	def forward(self, inputs):
+		x = self.relu(self.conv1(inputs))
+		x = self.batchnorm1(x)
+		x = self.relu(self.conv2(x))
+		x = self.batchnorm2(x+inputs)
+		return x
 
 class ImgGen(nn.Module):
 	def __init__(self, input_shape):
